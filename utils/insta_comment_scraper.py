@@ -78,15 +78,16 @@ def comment_scraper(url: str, user_name = username, pass_word = password):
                 #Use this way to fix ElementClickInterceptedException error
                 driver.execute_script("arguments[0].click();", login_button)
                 print('logged in')
-                content = driver.page_source.encode("utf-8")
-                # with open ('page.txt', 'w') as file:
-                #     file.write(content.decode('utf-8'))
-                print('page content:', content.decode('utf-8'))
             else:
                 pass
-
+            driver.implicitly_wait(5)
+            content2 = driver.page_source.encode("utf-8")
+            # with open ('page.txt', 'w') as file:
+            #     file.write(content.decode('utf-8'))
+            print('page content:', content2.decode('utf-8'))
             # Check if "Load more comments" exists, if so click
             while len(driver.find_elements(By.XPATH,"//*[name()='svg' and @aria-label='Load more comments']")) > 0:
+                print('Loading more comments...')
                 more_comments_button = driver.find_element(By.XPATH,"//*[name()='svg' and @aria-label='Load more comments']")
                 #Use this way to fix ElementClickInterceptedException error
                 more_comments_button.click()
