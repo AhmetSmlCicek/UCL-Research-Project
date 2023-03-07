@@ -65,8 +65,8 @@ def comment_scraper(url: str, user_name = username, pass_word = password):
                 pass
                        
             #Click on login button if appears
-            if len(driver.find_elements(By.XPATH,"//a[text()='Log in']")) > 0:
-                button = driver.find_element(By.XPATH,"//a[text()='Log in']")
+            if len(driver.find_elements(By.XPATH,"//div[text()='Log in']")) > 0:
+                button = driver.find_element(By.XPATH,"//div[text()='Log in']")
                 #Use this way to fix ElementClickInterceptedException error
                 driver.execute_script("arguments[0].click();", button)
                 #Place where you put your credentials 
