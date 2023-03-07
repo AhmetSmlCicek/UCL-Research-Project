@@ -10,6 +10,7 @@ from selenium.common.exceptions import WebDriverException
 from dotenv import load_dotenv
 import os
 import chromedriver_autoinstaller
+import pandas as pd
 
 chromedriver_autoinstaller.install()
 load_dotenv()
@@ -18,7 +19,6 @@ password = os.getenv('password')
 print('username:',username)
 
 def comment_scraper(url: str, user_name = username, pass_word = password):
-    print('user_name:', user_name)
     try:
         print('start')
         print('url:', url)
@@ -27,27 +27,23 @@ def comment_scraper(url: str, user_name = username, pass_word = password):
 
         #Instance of Chrome driver and connection to url
         options = webdriver.ChromeOptions() 
-        options.add_argument("user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36")
-        options.add_experimental_option('detach', True) #Path to your chrome profile
+        options.add_argument("user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36")  #Path to your chrome profile
+        options.add_experimental_option('detach', True)
         options.add_argument("user-data-dir=/tmp/.com.google.Chrome.ig41PN/Default")
         options.add_argument('--no-sandbox')
-        options.add_argument('--headless=new')
+        options.add_argument ('--headless=new')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-gpu')
         options.add_argument("--window-size=1920,1080")
-        options.add_argument("--disable-extensions")
-        options.add_argument("--no-default-browser-check")
-        options.add_argument("--ignore-certificate-errors")
+        # options.add_argument("--disable-extensions")
+        # options.add_argument("--no-default-browser-check")
+        # options.add_argument("--ignore-certificate-errors")
         driver = webdriver.Chrome(options=options)
         driver.get(url)
         #Wait for page loading
         driver.implicitly_wait(5)
 
         print('clicking on cookies...')
-        content1 = driver.page_source.encode("utf-8")
-                # with open ('page.txt', 'w') as file:
-                #     file.write(content.decode('utf-8'))
-        print('page content1:', content1.decode('utf-8'))
 
         if len(driver.find_elements(By.XPATH, "//div[text()='HTTP ERROR 429']"))>0:
             print('Sleeping... It will start again in 15 minutes.')
@@ -65,8 +61,8 @@ def comment_scraper(url: str, user_name = username, pass_word = password):
                 pass
                        
             #Click on login button if appears
-            if len(driver.find_elements(By.XPATH,"//div[text()='Log in']")) > 0:
-                button = driver.find_element(By.XPATH,"//div[text()='Log in']")
+            if len(driver.find_elements(By.XPATH,"//a[text()='Log in']")) > 0:
+                button = driver.find_element(By.XPATH,"//a[text()='Log in']")
                 #Use this way to fix ElementClickInterceptedException error
                 driver.execute_script("arguments[0].click();", button)
                 #Place where you put your credentials 
@@ -78,16 +74,15 @@ def comment_scraper(url: str, user_name = username, pass_word = password):
                 #Use this way to fix ElementClickInterceptedException error
                 driver.execute_script("arguments[0].click();", login_button)
                 print('logged in')
+                driver.implicitly_wait(5)
+                content = driver.page_source.encode("utf-8")
+                with open ('/app/Data/page.txt', 'w') as file:
+                    file.write(content.decode('utf-8'))
             else:
                 pass
-            driver.implicitly_wait(5)
-            content2 = driver.page_source.encode("utf-8")
-            # with open ('page.txt', 'w') as file:
-            #     file.write(content.decode('utf-8'))
-            print('page content:', content2.decode('utf-8'))
+
             # Check if "Load more comments" exists, if so click
             while len(driver.find_elements(By.XPATH,"//*[name()='svg' and @aria-label='Load more comments']")) > 0:
-                print('Loading more comments...')
                 more_comments_button = driver.find_element(By.XPATH,"//*[name()='svg' and @aria-label='Load more comments']")
                 #Use this way to fix ElementClickInterceptedException error
                 more_comments_button.click()
@@ -106,6 +101,9 @@ def comment_scraper(url: str, user_name = username, pass_word = password):
                     print('details:',comment_details)
                     last_list.append(comment_details)
             driver.close()
+            df = pd.DataFrame.from_records(last_list)
+            url_endpart = url.split('/')
+            df.to_csv(f'/app/Data/{url_endpart[-1]}.csv', index=False, mode='a')
             return last_list
     except WebDriverException:
         return 'Please try again'

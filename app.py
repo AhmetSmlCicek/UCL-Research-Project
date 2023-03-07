@@ -20,6 +20,7 @@ async def process(username:str, password:str, file: UploadFile = File(...)):
     if not file:
         return {"message": "No upload file sent"}
     else:
+        comment_count = 0
         content = await file.read()
         url_list = re.split(',', content.decode('utf-8'))
         comment_list = []
@@ -27,12 +28,16 @@ async def process(username:str, password:str, file: UploadFile = File(...)):
            print('url:',url)
            comments = comment_scraper(url, username, password)
            comment_list.append(comments)
-         
-        return {'comments':comment_list, 'url':url_list}
+           comment_count = comment_count + len(comments)
+        
+        if comment_count == 0:
+           return 'Please try again'
+        else: 
+          return {'comments':comment_list, 'url':url_list}
           
     
 @app.post("/url")
-async def instagram_comments(url: str, username:str, password:str):
+async def youtube_comments(url: str, username:str, password:str):
   print(url)
   comments = comment_scraper(url, username, password)
   return comments
